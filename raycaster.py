@@ -1,0 +1,52 @@
+from collections import namedtuple
+import math
+
+from utility import Vector, sign
+
+
+Ray = namedtuple("Ray", "length hit_vertical_wall")
+
+
+def calculate_ray_direction(direction: Vector, x: int, number_of_rays: int, angular_range: int) -> Vector:
+    # normalise camera plane: left side = -1, center = 0, right side = 1
+    camera_plane = direction.perpendicular * angular_range
+    fraction_along_camera_plane = x / float(number_of_rays)
+    normalised_fraction_along_camera_plane = 2 * fraction_along_camera_plane - 1
+    direction_to_point_on_camera_plane = camera_plane * normalised_fraction_along_camera_plane
+    return direction + direction_to_point_on_camera_plane
+
+
+def cast_ray(ray_origin: Vector, ray_direction: Vector, stop_condition: callable) -> Ray:
+    """
+    casts a ray until the ray hits a wall
+    returns:
+        distance to the wall: float
+        hit vertical wall: bool
+    """
+    step = ray_direction.apply(sign)
+    ray_unit_step_size = (1 / ray_direction).apply(abs)
+    grid_space = ray_origin.apply(math.floor)
+    ray_origin_fractional = ray_origin - grid_space
+
+    scale = Vector(0, 0)
+    scale.y = ray_origin_fractional.y if ray_direction.y < 0 else 1 - ray_origin_fractional.y
+    scale.x = ray_origin_fractional.x if ray_direction.x < 0 else 1 - ray_origin_fractional.x
+    
+    ray_length = scale * ray_unit_step_size
+
+    while True:
+        mask = Vector(ray_length.x < ray_length.y, ray_length.y <= ray_length.x)
+        grid_space += step * mask
+        ray_length += ray_unit_step_size * mask
+ 
+        if stop_condition(grid_space):
+            break
+
+    distance = ray_length - ray_unit_step_size
+    hit_vertical_wall = mask.y
+
+    return Ray(distance.x, hit_vertical_wall) if mask.x else Ray(distance.y, hit_vertical_wall)
+
+
+def cast_rays(origin: Vector, direction: Vector, number_of_rays: int, angular_range: float, stop_condition: callable) -> list[Ray]:
+    return [cast_ray(origin, calculate_ray_direction(direction, x, number_of_rays, angular_range), stop_condition) for x in range(number_of_rays)]
