@@ -9,7 +9,7 @@ MAP_HEIGHT = 10
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 480
 
-# Pyglet
+# PYGLET
 window = pyglet.window.Window(SCREEN_WIDTH, SCREEN_HEIGHT)
 keys = pyglet.window.key.KeyStateHandler()
 window.push_handlers(keys)
@@ -69,9 +69,11 @@ def on_draw():
 def update(dt) -> None:
     handle_input(dt)
 
+    # draw walls
     rays = cast_rays(camera_position, camera_direction, number_of_rays=SCREEN_WIDTH, angular_range=FOV, stop_condition=has_hit_wall)
     for i, ray in enumerate(rays):
         update_column_height(i, ray.length, ray.hit_vertical_wall)
+
 
 
 pyglet.clock.schedule_interval(update, 1/120.0)

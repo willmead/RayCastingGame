@@ -1,14 +1,23 @@
 from collections import namedtuple
 import math
+from typing import NamedTuple
 
 from utility import Vector, sign
 
 
-Ray = namedtuple("Ray", "length hit_vertical_wall")
+class Ray(NamedTuple):
+    """
+    Class containing information about a completed ray.
+    """
+    length: float
+    hit_vertical_wall: bool
 
 
 def calculate_ray_direction(direction: Vector, x: int, number_of_rays: int, angular_range: int) -> Vector:
-    # normalise camera plane: left side = -1, center = 0, right side = 1
+    """
+    Normalise camera plane: left side = -1, center = 0, right side = 1
+    then find direction from origin to point on plane
+    """
     camera_plane = direction.perpendicular * angular_range
     fraction_along_camera_plane = x / float(number_of_rays)
     normalised_fraction_along_camera_plane = 2 * fraction_along_camera_plane - 1
@@ -43,10 +52,18 @@ def cast_ray(ray_origin: Vector, ray_direction: Vector, stop_condition: callable
             break
 
     distance = ray_length - ray_unit_step_size
+    ray_distance = distance.x if mask.x else distance.y
     hit_vertical_wall = mask.y
 
-    return Ray(distance.x, hit_vertical_wall) if mask.x else Ray(distance.y, hit_vertical_wall)
+    return Ray(ray_distance, hit_vertical_wall) 
 
 
 def cast_rays(origin: Vector, direction: Vector, number_of_rays: int, angular_range: float, stop_condition: callable) -> list[Ray]:
-    return [cast_ray(origin, calculate_ray_direction(direction, x, number_of_rays, angular_range), stop_condition) for x in range(number_of_rays)]
+    """
+    Casts a given number of rays starting at the origin 
+    equally spread across the given angular range,
+    and equally spread either side of the given direction.
+    The rays will travel until the stop condition is reached.
+    """
+    ray_direction = lambda x: calculate_ray_direction(direction, x, number_of_rays, angular_range)
+    return [cast_ray(origin, ray_direction(x), stop_condition) for x in range(number_of_rays)]
