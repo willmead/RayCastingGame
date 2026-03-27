@@ -6,7 +6,7 @@ This is a project to explore implementing a raycasting engine to make a game sim
 
 ## TODO
 
-- [ ] Implement untextured raycasting to draw walls
+- [x] Implement untextured raycasting to draw walls
 - [ ] Implement textured raycasting to draw walls
 - [ ] Implement untextured raycasting to draw floor and ceiling
 - [ ] Implement textured raycasting to draw floor and ceiling
