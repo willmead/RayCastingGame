@@ -7,9 +7,14 @@ This is a project to explore implementing a raycasting engine to make a game sim
 ## TODO
 
 - [x] Implement untextured raycasting to draw walls
-- [ ] Implement textured raycasting to draw walls
+- [x] Implement textured raycasting to draw walls
 - [ ] Implement untextured raycasting to draw floor and ceiling
 - [ ] Implement textured raycasting to draw floor and ceiling
 - [ ] Add simple sprites (always face player)
 - [ ] Add sprite animations
 - [ ] Use ECS to keep track of entities
+
+
+## Notes
+
+* Implementation of textured raycasting is very messy, needs tidying up.

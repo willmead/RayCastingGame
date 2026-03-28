@@ -1,6 +1,6 @@
 import pyglet
 
-from raycaster import cast_rays
+from raycaster import Ray, cast_rays
 from utility import Vector
 
 
@@ -10,10 +10,17 @@ SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 480
 
 # PYGLET
+pyglet.options["dpi_scaling"] = "real"  # necessary for retina displays
 window = pyglet.window.Window(SCREEN_WIDTH, SCREEN_HEIGHT)
 keys = pyglet.window.key.KeyStateHandler()
 window.push_handlers(keys)
 main_batch = pyglet.graphics.Batch()
+
+textures = pyglet.image.load('textures.png')
+textures = pyglet.image.ImageGrid(textures, 1, 8)
+brick = textures[1]
+atlas = pyglet.image.atlas.TextureAtlas()
+brick = atlas.add(brick)
 
 # TILEMAP
 EMPTY_TILE = 0
@@ -34,14 +41,18 @@ camera_direction = Vector(-1, 0)
 
 # GRAPHICS
 FOV = 0.66
-columns = [pyglet.shapes.Rectangle(x, SCREEN_HEIGHT // 2, 1, 0, (255, 0, 0), batch=main_batch) for x in range(SCREEN_WIDTH)]
+columns = [pyglet.sprite.Sprite(brick, x, SCREEN_HEIGHT // 2, batch=main_batch) for x in range(SCREEN_WIDTH)]
 
 
-def update_column_height(column_index: int, ray_distance: float, is_vertical_wall: bool) -> None:
-    line_height = SCREEN_HEIGHT // ray_distance
+def update_column(column_index: int, ray: Ray) -> None:
+    line_height = SCREEN_HEIGHT // ray.length
     columns[column_index].height = line_height
     columns[column_index].y = SCREEN_HEIGHT // 2 - line_height // 2
-    columns[column_index].color = (255, 0, 0) if is_vertical_wall else (127, 0, 0)
+    
+    texture_x = ray.wall_fraction * 64
+    if not ray.hit_vertical_wall and ray.direction.x > 0: texture_x = 64 - texture_x - 1
+    if ray.hit_vertical_wall and ray.direction.y < 0: texture_x = 64 - texture_x - 1
+    columns[column_index].image = brick.get_region(int(texture_x), 0, 1, 64)
 
 
 def handle_input(dt) -> None:
@@ -72,8 +83,7 @@ def update(dt) -> None:
     # draw walls
     rays = cast_rays(camera_position, camera_direction, number_of_rays=SCREEN_WIDTH, angular_range=FOV, stop_condition=has_hit_wall)
     for i, ray in enumerate(rays):
-        update_column_height(i, ray.length, ray.hit_vertical_wall)
-
+        update_column(i, ray)
 
 
 pyglet.clock.schedule_interval(update, 1/120.0)
