@@ -1,3 +1,5 @@
+import math
+
 import pyglet
 
 from raycaster import Ray, cast_rays
@@ -16,11 +18,20 @@ keys = pyglet.window.key.KeyStateHandler()
 window.push_handlers(keys)
 main_batch = pyglet.graphics.Batch()
 
+# RESOURCES
 textures = pyglet.image.load('textures.png')
 textures = pyglet.image.ImageGrid(textures, 1, 8)
-brick = textures[1]
 atlas = pyglet.image.atlas.TextureAtlas()
-brick = atlas.add(brick)
+flag = atlas.add(textures[0])
+brick = atlas.add(textures[1])
+moss = atlas.add(textures[2])
+cobblestone = atlas.add(textures[3])
+square_stone = atlas.add(textures[4])
+mossy_cobblestone = atlas.add(textures[5])
+wood = atlas.add(textures[6])
+dry_stone = atlas.add(textures[7])
+TEXTURE_SIZE = 64
+TEXTURES = [flag, brick, moss, cobblestone, square_stone, mossy_cobblestone, wood, dry_stone]
 
 # TILEMAP
 EMPTY_TILE = 0
@@ -44,15 +55,27 @@ FOV = 0.66
 columns = [pyglet.sprite.Sprite(brick, x, SCREEN_HEIGHT // 2, batch=main_batch) for x in range(SCREEN_WIDTH)]
 
 
+def calculate_column_texture(ray: Ray) -> pyglet.image.TextureRegion:
+    wall_x = ray.final_position.y if ray.hit_vertical_wall else ray.final_position.x
+    wall_fraction = wall_x - math.floor(wall_x)
+    texture_x = int(wall_fraction * TEXTURE_SIZE)
+
+    reverse_direction = (not ray.hit_vertical_wall and ray.direction.x > 0) or (ray.hit_vertical_wall and ray.direction.y < 0)
+    if reverse_direction:
+        texture_x = TEXTURE_SIZE - texture_x - 1
+
+    # -1 so we can use a texture at index 0
+    texture = TEXTURES[get_tile_at(world_map, ray.grid_space) - 1]
+
+    return texture.get_region(x=texture_x, y=0, width=1, height=TEXTURE_SIZE)
+
+
 def update_column(column_index: int, ray: Ray) -> None:
     line_height = SCREEN_HEIGHT // ray.length
-    columns[column_index].height = line_height
-    columns[column_index].y = SCREEN_HEIGHT // 2 - line_height // 2
-    
-    texture_x = ray.wall_fraction * 64
-    if not ray.hit_vertical_wall and ray.direction.x > 0: texture_x = 64 - texture_x - 1
-    if ray.hit_vertical_wall and ray.direction.y < 0: texture_x = 64 - texture_x - 1
-    columns[column_index].image = brick.get_region(int(texture_x), 0, 1, 64)
+    column = columns[column_index]
+    column.height = line_height
+    column.y = SCREEN_HEIGHT // 2 - line_height // 2
+    column.image = calculate_column_texture(ray)
 
 
 def handle_input(dt) -> None:

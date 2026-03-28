@@ -1,19 +1,29 @@
 from collections.abc import Callable
+from dataclasses import dataclass
 import math
 from typing import NamedTuple
 
 from utility import Vector, sign
 
 
-class Ray(NamedTuple):
+@dataclass
+class Ray():
     """
     Class containing information about a completed ray.
     """
+    origin: Vector
     length: float
     direction: Vector
-    hit_vertical_wall: bool
     grid_space: Vector
-    wall_fraction: float
+    hit_vertical_wall: bool
+
+    @property
+    def final_position(self) -> Vector:
+        return self.origin + self.direction * self.length
+    
+    @property
+    def hit_horizontal_wall(self) -> bool:
+        return not self.hit_vertical_wall
 
 
 def calculate_ray_direction(direction: Vector, x: int, number_of_rays: int, angular_range: float) -> Vector:
@@ -56,15 +66,10 @@ def cast_ray(ray_origin: Vector, ray_direction: Vector, stop_condition: Callable
             break
 
     distance = ray_length - ray_unit_step_size
-    ray_distance = distance.x if mask.x else distance.y
     hit_vertical_wall = bool(mask.x)
+    ray_distance = distance.x if hit_vertical_wall else distance.y
 
-    wall_coords = ray_origin + ray_direction * ray_distance
-    wall_x = wall_coords.y if hit_vertical_wall else wall_coords.x
-
-    wall_fraction = wall_x - math.floor(wall_x)
-
-    return Ray(ray_distance, ray_direction, hit_vertical_wall, grid_space, wall_fraction)
+    return Ray(ray_origin, ray_distance, ray_direction, grid_space, hit_vertical_wall)
 
 
 def cast_rays(origin: Vector, direction: Vector, number_of_rays: int, angular_range: float, stop_condition: Callable) -> list[Ray]:
