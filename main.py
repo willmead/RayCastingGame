@@ -29,7 +29,7 @@ with open("map.txt") as map_file:
     world_map = map_file.read().split("\n")
 
 def get_tile_at(world_map: list[str], position: Vector) -> int:
-    return int(world_map[position.x][position.y])
+    return int(world_map[int(position.x)][int(position.y)])
 
 def has_hit_wall(grid_space: Vector) -> bool:
     return get_tile_at(world_map, grid_space) is not EMPTY_TILE

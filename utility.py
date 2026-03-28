@@ -1,17 +1,16 @@
+from collections.abc import Callable
 import math
-from numbers import Number
-
 
 type Radians = int | float 
 
 
-def sign(x: Number) -> int:
+def sign(x: float) -> int:
     return int(math.copysign(1, x))
 
 
 class Vector:
 
-    def __init__(self, x: Number, y: Number) -> None:
+    def __init__(self, x: float, y: float) -> None:
         self.x = x
         self.y = y
 
@@ -21,20 +20,22 @@ class Vector:
     def __sub__(self, other: Vector) -> Vector:
         return Vector(self.x - other.x, self.y - other.y)
     
-    def __mul__(self, multiplier: Number | Vector):
-        if isinstance(multiplier, Number):
+    def __mul__(self, multiplier: int | float | Vector):
+        if isinstance(multiplier, float):
+            return Vector(self.x * multiplier, self.y * multiplier)
+        if isinstance(multiplier, int):
             return Vector(self.x * multiplier, self.y * multiplier)
         if isinstance(multiplier, Vector):
             # N.B. This is the Hadamard product (element-wise) not dot product
             return Vector(self.x * multiplier.x, self.y * multiplier.y)
         return NotImplemented
     
-    def __truediv__(self, divisor: Number):
+    def __truediv__(self, divisor: float):
         if divisor == 0:
             return Vector(1e30, 1e30)
         return Vector(self.x / divisor, self.y / divisor)
     
-    def __rtruediv__(self, dividend: Number):
+    def __rtruediv__(self, dividend: float):
         x = dividend / self.x if self.x != 0 else 1e30
         y = dividend / self.y if self.y != 0 else 1e30
         return Vector(x, y)
@@ -61,5 +62,5 @@ class Vector:
         self.x = new_x
         self.y = new_y
 
-    def apply(self, function: callable) -> Vector:
+    def apply(self, function: Callable) -> Vector:
         return Vector(function(self.x), function(self.y))

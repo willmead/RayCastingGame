@@ -1,3 +1,4 @@
+from collections.abc import Callable
 import math
 from typing import NamedTuple
 
@@ -15,7 +16,7 @@ class Ray(NamedTuple):
     wall_fraction: float
 
 
-def calculate_ray_direction(direction: Vector, x: int, number_of_rays: int, angular_range: int) -> Vector:
+def calculate_ray_direction(direction: Vector, x: int, number_of_rays: int, angular_range: float) -> Vector:
     """
     Normalise camera plane: left side = -1, center = 0, right side = 1
     then find direction from origin to point on plane
@@ -27,7 +28,7 @@ def calculate_ray_direction(direction: Vector, x: int, number_of_rays: int, angu
     return direction + direction_to_point_on_camera_plane
 
 
-def cast_ray(ray_origin: Vector, ray_direction: Vector, stop_condition: callable) -> Ray:
+def cast_ray(ray_origin: Vector, ray_direction: Vector, stop_condition: Callable) -> Ray:
     """
     casts a ray until the ray hits a wall
     returns:
@@ -46,7 +47,8 @@ def cast_ray(ray_origin: Vector, ray_direction: Vector, stop_condition: callable
     ray_length = scale * ray_unit_step_size
 
     while True:
-        mask = Vector(ray_length.x < ray_length.y, ray_length.y <= ray_length.x)
+        # instead of an if statement the results of the bools are stored as floats in a vector mask
+        mask = Vector(float(ray_length.x < ray_length.y), float(ray_length.y <= ray_length.x))
         grid_space += step * mask
         ray_length += ray_unit_step_size * mask
  
@@ -55,7 +57,7 @@ def cast_ray(ray_origin: Vector, ray_direction: Vector, stop_condition: callable
 
     distance = ray_length - ray_unit_step_size
     ray_distance = distance.x if mask.x else distance.y
-    hit_vertical_wall = mask.x
+    hit_vertical_wall = bool(mask.x)
 
     wall_coords = ray_origin + ray_direction * ray_distance
     wall_x = wall_coords.y if hit_vertical_wall else wall_coords.x
@@ -65,7 +67,7 @@ def cast_ray(ray_origin: Vector, ray_direction: Vector, stop_condition: callable
     return Ray(ray_distance, ray_direction, hit_vertical_wall, grid_space, wall_fraction)
 
 
-def cast_rays(origin: Vector, direction: Vector, number_of_rays: int, angular_range: float, stop_condition: callable) -> list[Ray]:
+def cast_rays(origin: Vector, direction: Vector, number_of_rays: int, angular_range: float, stop_condition: Callable) -> list[Ray]:
     """
     Casts a given number of rays starting at the origin 
     equally spread across the given angular range,
