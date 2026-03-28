@@ -1,13 +1,22 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import math
-from typing import NamedTuple
+from resources import wood
 
+import resources
 from utility import Vector, sign
 
 
 @dataclass
-class Ray():
+class FloorRay:
+    x: int
+    y: int
+    floor: Vector
+    cell: Vector
+
+
+@dataclass
+class Ray:
     """
     Class containing information about a completed ray.
     """
@@ -81,3 +90,50 @@ def cast_rays(origin: Vector, direction: Vector, number_of_rays: int, angular_ra
     """
     ray_direction = lambda x: calculate_ray_direction(direction, x, number_of_rays, angular_range)
     return [cast_ray(origin, ray_direction(x), stop_condition) for x in range(number_of_rays)]
+
+
+
+tex_pixels = resources.tex_pixels
+pix = bytearray(320 * 240 * 3)  # RGB
+
+def floor_casting(origin: Vector, direction: Vector) -> bytearray:
+
+    camera_plane = direction.perpendicular * 0.66
+    left_ray_direction = direction - camera_plane
+    right_ray_direction = direction + camera_plane
+    tw = resources.tex_width
+    half_height = 240 // 2
+    for y in range(240):
+        y_position = y - half_height
+        vertical_camera_position = half_height
+
+        if y_position == 0:
+            continue
+
+        row_distance = vertical_camera_position / y_position
+
+        floor_step_x = row_distance * (right_ray_direction.x - left_ray_direction.x) / 640
+        floor_step_y = row_distance * (right_ray_direction.y - left_ray_direction.y) / 640
+        floor_x = origin.x + row_distance * left_ray_direction.x
+        floor_y = origin.y + row_distance * left_ray_direction.y
+
+        for x in range(320):
+            cell_x = int(floor_x)
+            cell_y = int(floor_y)
+
+            texture_x = int(64 * (floor_x - cell_x)) & (64 - 1)
+            texture_y = int(64 * (floor_y - cell_y)) & (64 - 1)
+            
+            index = (texture_y * tw + texture_x) * 3
+            r = tex_pixels[index]
+            g = tex_pixels[index + 1]
+            b = tex_pixels[index + 2]
+
+            i = (y * 320 + x) * 3
+            pix[i] = r
+            pix[i + 1] = g
+            pix[i + 2] = b
+
+            floor_x += floor_step_x
+            floor_y += floor_step_y
+    return pix
