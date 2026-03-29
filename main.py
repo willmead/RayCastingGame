@@ -1,9 +1,9 @@
 import math
 
 import pyglet
-
-from raycaster import Ray, cast_rays, floor_casting
-import renderer
+from pyglet import gl
+                                                                                                                
+from raycaster import Ray, cast_rays
 import resources
 from utility import Vector
 
@@ -19,7 +19,6 @@ window = pyglet.window.Window(SCREEN_WIDTH, SCREEN_HEIGHT)
 keys = pyglet.window.key.KeyStateHandler()
 window.push_handlers(keys)
 main_batch = pyglet.graphics.Batch()
-
 
 # TILEMAP
 EMPTY_TILE = 0
@@ -41,13 +40,7 @@ camera_direction = Vector(-1, 0)
 # GRAPHICS
 FOV = 0.66
 columns = [pyglet.sprite.Sprite(resources.brick, x, SCREEN_HEIGHT // 2, batch=main_batch) for x in range(SCREEN_WIDTH)]
-image = pyglet.image.ImageData(
-    320,
-    240,
-    'RGB',
-    bytes(renderer.pixels),
-    pitch=320 * 3
-)
+
 
 def calculate_column_texture(ray: Ray) -> pyglet.image.TextureRegion:
     wall_x = ray.final_position.y if ray.hit_vertical_wall else ray.final_position.x
@@ -91,7 +84,6 @@ def handle_input(dt) -> None:
 @window.event
 def on_draw():
     window.clear()
-    image.blit(0, 0, width=640, height=480)
     main_batch.draw()
 
 
@@ -104,14 +96,6 @@ def update(dt) -> None:
     for i, ray in enumerate(rays):
         update_column(i, ray)
 
-    # draw floors
-    pixels = floor_casting(camera_position, camera_direction)
-    global image
-    image.set_data(
-        'RGB',
-        320 * 3,
-        bytes(pixels),
-    )
 
 pyglet.clock.schedule_interval(update, 1/120.0)
 pyglet.app.run()

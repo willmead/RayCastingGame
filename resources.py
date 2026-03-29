@@ -14,11 +14,3 @@ wood = atlas.add(textures[6])
 dry_stone = atlas.add(textures[7])
 TEXTURE_SIZE = 64
 TEXTURES = [flag, brick, moss, cobblestone, square_stone, mossy_cobblestone, wood, dry_stone]
-
-texture = wood.get_image_data()
-format = 'RGB'
-pitch = texture.width * len(format)
-texture_data = texture.get_data(format, pitch)
-tex_pixels = texture_data
-tex_width = texture.width
-tex_height = texture.height
